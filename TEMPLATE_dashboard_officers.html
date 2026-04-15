@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard เจ้าหน้าที่ส่งเสริมสหกรณ์</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#1a4f8a; --primary-light:#2563b0; --primary-dark:#0f2d52;
+  --accent:#e8a000; --success:#16a34a; --danger:#dc2626; --warn:#d97706;
+  --bg:#eef2f8; --surface:#fff; --surface2:#f6f9fc;
+  --border:#d1dbe8; --text:#1e293b; --muted:#64748b; --light:#94a3b8;
+  --sh:0 2px 12px rgba(26,79,138,.10); --sh-md:0 6px 28px rgba(26,79,138,.15);
+  --r:12px; --r-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ══ SETUP WIZARD ══ */
+#setupScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(145deg,#091e3a 0%,var(--primary) 55%,#1e6bb8 100%);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:24px 16px 40px;overflow-y:auto;
+}
+.setup-card{background:var(--surface);border-radius:20px;width:100%;max-width:680px;box-shadow:0 32px 80px rgba(0,0,0,.35);overflow:hidden}
+.setup-header{background:var(--primary-dark);padding:26px 30px 20px;display:flex;align-items:center;gap:16px}
+.setup-header-logo{width:54px;height:54px;background:rgba(255,255,255,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.setup-header-logo svg{width:34px;height:34px}
+.setup-header-text h1{font-size:1.15rem;font-weight:800;color:#fff;line-height:1.3}
+.setup-header-text p{font-size:.78rem;color:rgba(255,255,255,.62);margin-top:3px}
+.step-bar{display:flex;background:#f8fafc;border-bottom:1px solid var(--border);padding:0 30px;overflow-x:auto}
+.step-item{display:flex;align-items:center;gap:7px;padding:13px 0;margin-right:22px;font-size:.8rem;font-weight:600;color:var(--light);border-bottom:2px solid transparent;transition:.2s;white-space:nowrap;flex-shrink:0}
+.step-item.active{color:var(--primary);border-color:var(--primary)}
+.step-item.done{color:var(--success);border-color:var(--success)}
+.step-num{width:21px;height:21px;border-radius:50%;background:var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;transition:.2s;flex-shrink:0}
+.step-item.active .step-num{background:var(--primary);color:#fff}
+.step-item.done .step-num{background:var(--success);color:#fff}
+.step-panel{display:none;padding:26px 30px}
+.step-panel.active{display:block}
+.sp-title{font-size:.98rem;font-weight:800;color:var(--text);margin-bottom:4px}
+.sp-sub{font-size:.8rem;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.step-nav{display:flex;justify-content:space-between;align-items:center;padding:18px 30px 26px;border-top:1px solid var(--border)}
+
+/* ── form ── */
+.fg{margin-bottom:13px}
+.fg label{display:block;font-size:.77rem;font-weight:800;color:var(--muted);margin-bottom:4px;letter-spacing:.03em}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:.88rem;font-family:inherit;outline:none;transition:.2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,79,138,.1)}
+.fg .hint{font-size:.72rem;color:var(--muted);margin-top:3px;line-height:1.5}
+.fg .hint code{background:#f1f5f9;padding:1px 4px;border-radius:3px;font-family:monospace;font-size:.7rem}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── user table ── */
+.user-table{width:100%;border-collapse:collapse;margin-bottom:10px}
+.user-table th{background:#f0f5fb;padding:7px 11px;font-size:.73rem;font-weight:800;color:var(--muted);text-align:left;border-bottom:2px solid var(--border)}
+.user-table td{padding:7px 11px;font-size:.82rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.user-table td input,.user-table td select{width:100%;padding:6px 9px;border:1.5px solid var(--border);border-radius:6px;font-size:.82rem;font-family:inherit;outline:none;transition:.2s}
+.user-table td input:focus,.user-table td select:focus{border-color:var(--primary)}
+.user-table tr:last-child td{border-bottom:none}
+.btn-del-row{background:rgba(220,38,38,.1);color:var(--danger);border:none;width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:.82rem;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
+.btn-del-row:hover{background:var(--danger);color:#fff}
+.btn-add-row{background:rgba(26,79,138,.07);color:var(--primary);border:1.5px dashed var(--border);padding:7px 13px;border-radius:7px;font-size:.78rem;font-family:inherit;font-weight:700;cursor:pointer;transition:.2s;width:100%;margin-top:3px}
+.btn-add-row:hover{background:rgba(26,79,138,.13);border-color:var(--primary)}
+
+/* ── group builder ── */
+.grp-block{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:9px}
+.grp-block-head{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+.grp-block-head input{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.86rem;font-family:inherit;outline:none;transition:.2s}
+.grp-block-head input:focus{border-color:var(--primary)}
+.grp-officers{padding-left:2px}
+.grp-officer-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.grp-officer-row input{flex:1;padding:6px 9px;border:1.5px solid var(--border);border-radius:6px;font-size:.81rem;font-family:inherit;outline:none;transition:.2s}
+.grp-officer-row input:focus{border-color:var(--primary)}
+.btn-add-officer{background:none;border:1.5px dashed var(--border);color:var(--muted);padding:5px 10px;border-radius:6px;font-size:.74rem;font-family:inherit;cursor:pointer;transition:.2s;margin-top:1px}
+.btn-add-officer:hover{border-color:var(--primary);color:var(--primary)}
+.btn-add-group{width:100%;padding:9px;background:rgba(26,79,138,.06);border:1.5px dashed var(--border);border-radius:9px;font-size:.8rem;font-family:inherit;font-weight:700;color:var(--primary);cursor:pointer;transition:.2s;margin-bottom:5px}
+.btn-add-group:hover{background:rgba(26,79,138,.13);border-color:var(--primary)}
+
+/* ── color picker ── */
+.color-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
+.color-swatch{width:30px;height:30px;border-radius:7px;cursor:pointer;border:2px solid transparent;transition:.15s;flex-shrink:0}
+.color-swatch.active{border-color:#fff;box-shadow:0 0 0 3px rgba(0,0,0,.28);transform:scale(1.12)}
+.preview-box{background:var(--primary-dark);border-radius:9px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-top:12px}
+.preview-title{font-size:.88rem;font-weight:800;color:#fff}
+.preview-sub{font-size:.7rem;color:rgba(255,255,255,.62);margin-top:2px}
+
+/* ── CSV drop ── */
+.csv-drop{border:2px dashed var(--border);border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:.2s;background:#fafbfd}
+.csv-drop:hover,.csv-drop.dragover{border-color:var(--primary);background:#f0f5ff}
+.csv-drop-icon{font-size:2rem;margin-bottom:6px}
+.csv-drop-text{font-size:.84rem;color:var(--muted);line-height:1.6}
+.csv-drop-text strong{color:var(--primary)}
+.csv-preview{margin-top:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.csv-preview-head{padding:7px 12px;background:#f0f5fb;font-size:.74rem;font-weight:800;color:var(--muted);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.csv-preview table{width:100%;border-collapse:collapse;font-size:.74rem}
+.csv-preview th{background:#e8f0fb;padding:5px 9px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)}
+.csv-preview td{padding:4px 9px;border-bottom:1px solid #f1f5f9;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.csv-col-map{margin-top:12px}
+.csv-col-map-title{font-size:.78rem;font-weight:800;color:var(--text);margin-bottom:8px}
+.csv-map-row{display:grid;grid-template-columns:1fr auto 1fr;gap:9px;align-items:center;margin-bottom:7px}
+.csv-map-label{font-weight:700;color:var(--muted);font-size:.76rem}
+.csv-map-arrow{color:var(--light);text-align:center}
+.csv-map-row select{padding:5px 9px;border:1.5px solid var(--border);border-radius:6px;font-size:.8rem;font-family:inherit;outline:none;transition:.2s}
+.csv-map-row select:focus{border-color:var(--primary)}
+.csv-status{padding:9px 13px;border-radius:7px;font-size:.8rem;font-weight:600;margin-top:9px;display:none}
+.csv-status.ok{background:#dcfce7;color:#15803d;display:block}
+.csv-status.err{background:#fee2e2;color:#b91c1c;display:block}
+.csv-status.info{background:#dbeafe;color:#1d4ed8;display:block}
+
+/* ── summary ── */
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:18px}
+.summary-card{background:#f8fafc;border:1px solid var(--border);border-radius:9px;padding:12px 14px}
+.summary-card h4{font-size:.72rem;font-weight:800;color:var(--muted);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase}
+.summary-card p{font-size:.88rem;font-weight:700;color:var(--text);line-height:1.5}
+.summary-card p small{font-size:.76rem;font-weight:400;color:var(--muted);display:block}
+
+/* ══ LOGIN ══ */
+#loginScreen{position:fixed;inset:0;z-index:8888;background:linear-gradient(145deg,#091e3a 0%,var(--primary) 55%,#1e6bb8 100%);display:none;align-items:center;justify-content:center;padding:20px}
+#loginScreen.show{display:flex}
+.login-card{background:var(--surface);border-radius:20px;padding:42px 36px;width:100%;max-width:410px;box-shadow:0 32px 80px rgba(0,0,0,.35);text-align:center}
+.lcard-logo{width:84px;height:84px;margin:0 auto 15px;background:var(--primary-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(26,79,138,.5)}
+.lcard-logo svg{width:52px;height:52px}
+.lcard-title{font-size:1.18rem;font-weight:800;color:var(--primary);line-height:1.4;margin-bottom:3px}
+.lcard-sub{font-size:.81rem;color:var(--muted);margin-bottom:24px}
+.lfield{margin-bottom:12px;text-align:left}
+.lfield label{display:block;font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:4px}
+.lfield input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:.92rem;font-family:inherit;outline:none;transition:.2s}
+.lfield input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,79,138,.12)}
+#loginError{color:var(--danger);font-size:.78rem;min-height:17px;margin-bottom:8px}
+.btn-login{width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:var(--r-sm);font-size:.96rem;font-weight:700;font-family:inherit;cursor:pointer;transition:.2s}
+.btn-login:hover{background:var(--primary-light);transform:translateY(-1px);box-shadow:var(--sh-md)}
+.login-reset{margin-top:11px;font-size:.73rem;color:var(--light)}
+.login-reset a{color:var(--primary);cursor:pointer;text-decoration:underline}
+
+/* ══ APP ══ */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.show{display:flex}
+.topbar{background:linear-gradient(90deg,var(--primary-dark) 0%,var(--primary) 100%);padding:0 22px;display:flex;align-items:center;gap:12px;height:60px;box-shadow:0 3px 12px rgba(0,0,0,.25);position:sticky;top:0;z-index:200}
+.tb-logo{width:42px;height:42px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.tb-logo svg{width:26px;height:26px}
+.tb-text{flex:1;overflow:hidden}
+.tb-title{font-size:.97rem;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-sub{font-size:.7rem;color:rgba(255,255,255,.62)}
+.tb-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.tb-user{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border-radius:30px;padding:4px 11px 4px 5px}
+.tb-avatar{width:27px;height:27px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;color:var(--primary-dark)}
+.tb-uname{font-size:.8rem;color:#fff;font-weight:600}
+.btn-topbar{background:rgba(255,255,255,.14);border:none;border-radius:7px;color:rgba(255,255,255,.9);padding:5px 11px;font-size:.76rem;cursor:pointer;font-family:inherit;transition:.2s;display:flex;align-items:center;gap:5px}
+.btn-topbar:hover{background:rgba(255,255,255,.26)}
+.main{flex:1;padding:20px;max-width:1440px;margin:0 auto;width:100%}
+
+/* stats */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:19px}
+.sc{background:var(--surface);border-radius:var(--r);padding:16px;box-shadow:var(--sh);display:flex;align-items:center;gap:12px;border-left:4px solid var(--primary);transition:.2s}
+.sc:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.sc.c-gold{border-color:var(--accent)} .sc.c-green{border-color:var(--success)} .sc.c-warn{border-color:var(--warn)} .sc.c-red{border-color:var(--danger)}
+.sc-icon{width:41px;height:41px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0}
+.ic-blue{background:rgba(26,79,138,.1)} .ic-gold{background:rgba(232,160,0,.13)} .ic-green{background:rgba(22,163,74,.11)} .ic-warn{background:rgba(217,119,6,.11)} .ic-red{background:rgba(220,38,38,.1)}
+.sc-num{font-size:1.65rem;font-weight:800;line-height:1} .sc-label{font-size:.74rem;color:var(--muted);margin-top:2px}
+
+/* toolbar */
+.toolbar{background:var(--surface);border-radius:var(--r);padding:12px 15px;box-shadow:var(--sh);margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sw{position:relative;flex:1;min-width:185px}
+.sw input{width:100%;padding:8px 14px 8px 37px;border:1.5px solid var(--border);border-radius:30px;font-size:.84rem;font-family:inherit;outline:none;transition:.2s}
+.sw input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,79,138,.09)}
+.sw-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.88rem;pointer-events:none}
+select.flt{padding:8px 12px;border:1.5px solid var(--border);border-radius:30px;font-size:.82rem;font-family:inherit;outline:none;cursor:pointer;background:var(--surface);color:var(--text);transition:.2s}
+select.flt:focus{border-color:var(--primary)}
+.tb-right{display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap}
+
+/* table */
+.table-wrap{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.tw-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.tw-title{font-size:.92rem;font-weight:800;color:var(--text)} .tw-count{font-size:.74rem;color:var(--muted)}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:800px}
+thead th{background:#f0f5fb;padding:10px 12px;text-align:left;font-size:.73rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;transition:.15s}
+thead th:hover{background:#e4edf7}
+thead th.sorted{color:var(--primary)}
+thead th .si{margin-left:3px;font-size:.68rem}
+tbody tr{border-bottom:1px solid #f0f5fb;transition:.1s}
+tbody tr:hover{background:#f5f8fd}
+tbody tr:last-child{border-bottom:none}
+td{padding:10px 12px;font-size:.83rem;vertical-align:middle}
+.td-no{color:var(--light);font-size:.75rem;font-weight:600;text-align:center;width:38px}
+.td-id{font-family:monospace;font-size:.72rem;color:var(--muted)}
+.td-name{font-weight:700;max-width:230px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;white-space:nowrap}
+.b-sav{background:#dbeafe;color:#1d4ed8} .b-ser{background:#fce7f3;color:#9d174d}
+.b-cre{background:#d1fae5;color:#065f46} .b-sto{background:#fef3c7;color:#92400e}
+.b-agr{background:#dcfce7;color:#14532d} .b-fis{background:#e0f2fe;color:#075985}
+.td-grp{font-size:.79rem;color:var(--primary);font-weight:600}
+.empty-cell{color:var(--light);font-style:italic;font-weight:400}
+.td-act{white-space:nowrap;text-align:right}
+.ab{width:28px;height:28px;border-radius:6px;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:.83rem;transition:.15s;margin-left:3px}
+.ab-edit{background:rgba(26,79,138,.1);color:var(--primary)} .ab-edit:hover{background:var(--primary);color:#fff}
+.ab-del{background:rgba(220,38,38,.1);color:var(--danger)} .ab-del:hover{background:var(--danger);color:#fff}
+.pager{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid var(--border);flex-wrap:wrap;gap:7px}
+.pg-info{font-size:.74rem;color:var(--muted)}
+.pg-btns{display:flex;gap:3px}
+.pb{min-width:31px;height:31px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);font-size:.8rem;cursor:pointer;font-family:inherit;transition:.15s;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.pb:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+.pb.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:800}
+.pb:disabled{opacity:.35;cursor:not-allowed}
+
+/* modals */
+.overlay{position:fixed;inset:0;z-index:1000;background:rgba(10,24,46,.55);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--surface);border-radius:16px;width:100%;max-width:560px;box-shadow:0 28px 90px rgba(0,0,0,.28);animation:slideUp .2s ease;max-height:90vh;overflow-y:auto}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.mh{padding:19px 22px 13px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface);z-index:1}
+.mh-title{font-size:.98rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px}
+.mc{width:28px;height:28px;border-radius:7px;border:none;background:var(--surface2);cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:.15s}
+.mc:hover{background:var(--border)}
+.mb{padding:15px 22px}
+.m-section{font-size:.68rem;font-weight:900;color:var(--primary);letter-spacing:.08em;text-transform:uppercase;padding:3px 0 8px;margin-top:4px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.mf{padding:12px 22px 19px;display:flex;gap:7px;justify-content:flex-end;border-top:1px solid var(--border)}
+.settings-modal{max-width:640px}
+.settings-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px}
+.stab{padding:8px 15px;font-size:.82rem;font-weight:700;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit;transition:.15s}
+.stab.active{color:var(--primary);border-color:var(--primary)}
+.cmodal{max-width:360px}
+.cicon{font-size:2.3rem;text-align:center;margin-bottom:8px}
+.cmsg{text-align:center;font-size:.88rem;color:var(--text);line-height:1.65}
+.cmsg strong{color:var(--danger)}
+
+/* buttons */
+.btn{padding:8px 20px;border-radius:30px;border:none;font-size:.86rem;font-family:inherit;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-light);transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,79,138,.3)}
+.btn-outline{background:transparent;color:var(--primary);border:1.5px solid var(--primary)}
+.btn-outline:hover{background:var(--primary);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#15803d}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-sm{padding:6px 13px;font-size:.78rem;border-radius:20px}
+
+/* toast */
+#toastCont{position:fixed;bottom:18px;right:18px;z-index:9000;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--text);color:#fff;padding:10px 15px;border-radius:9px;font-size:.82rem;box-shadow:0 4px 18px rgba(0,0,0,.22);animation:fadeUp .22s ease;display:flex;align-items:center;gap:7px;min-width:195px}
+.toast.success{background:var(--success)} .toast.danger{background:var(--danger)} .toast.warn{background:var(--warn)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.empty-st{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty-st div{font-size:2.4rem;margin-bottom:8px}
+
+@media(max-width:640px){
+  .main{padding:13px} .topbar{padding:0 13px} .tb-title{font-size:.84rem} .tb-sub{display:none}
+  .frow{grid-template-columns:1fr} .stats-row{grid-template-columns:1fr 1fr}
+  .setup-header{padding:18px 20px} .step-panel{padding:18px 20px} .step-nav{padding:14px 20px 20px}
+  .summary-grid{grid-template-columns:1fr} .login-card{padding:28px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ SETUP WIZARD ══════════════════════ -->
+<div id="setupScreen">
+  <div class="setup-card">
+    <div class="setup-header">
+      <div class="setup-header-logo">
+        <svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="20" r="10" fill="#fff" opacity=".9"/><path d="M22 30Q22 34 32 35.5Q42 34 42 30L42 32Q42 38 32 39.5Q22 38 22 32Z" fill="#fff" opacity=".9"/><path d="M12 60Q12 43 32 40.5Q52 43 52 60Z" fill="#fff" opacity=".9"/><path d="M32 40.5L26 47L32 50L38 47Z" fill="#e8a000"/><rect x="27" y="45" width="10" height="6" rx="1.5" fill="#e8a000"/><rect x="12" y="41" width="8" height="3.5" rx="1.75" fill="#e8a000"/><rect x="44" y="41" width="8" height="3.5" rx="1.75" fill="#e8a000"/><path d="M19 18Q19 9 32 9Q45 9 45 18" fill="rgba(255,255,255,.35)"/><rect x="17" y="17" width="30" height="3.5" rx="1.75" fill="rgba(255,255,255,.3)"/><circle cx="32" cy="13" r="3.5" fill="#e8a000"/><circle cx="32" cy="13" r="1.8" fill="#fff"/></svg>
+      </div>
+      <div class="setup-header-text">
+        <h1>⚙️ ตั้งค่าหน่วยงาน</h1>
+        <p>กรอกข้อมูลหน่วยงานของท่านเพื่อเริ่มใช้งานระบบ Dashboard (ทำครั้งเดียว)</p>
+      </div>
+    </div>
+
+    <div class="step-bar">
+      <div class="step-item active" id="tab1"><span class="step-num">1</span>ข้อมูลหน่วยงาน</div>
+      <div class="step-item" id="tab2"><span class="step-num">2</span>บัญชีผู้ใช้</div>
+      <div class="step-item" id="tab3"><span class="step-num">3</span>กลุ่ม &amp; เจ้าหน้าที่</div>
+      <div class="step-item" id="tab4"><span class="step-num">4</span>นำเข้าข้อมูล</div>
+      <div class="step-item" id="tab5"><span class="step-num">5</span>สรุป</div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="step-panel active" id="panel1">
+      <div class="sp-title">ข้อมูลหน่วยงาน</div>
+      <div class="sp-sub">กรอกชื่อและรายละเอียดของสำนักงาน / หน่วยงานของท่าน</div>
+      <div class="frow">
+        <div class="fg"><label>ชื่อหน่วยงาน (เต็ม) *</label><input id="s_agencyFull" type="text" placeholder="เช่น สำนักงานส่งเสริมสหกรณ์กรุงเทพฯ พื้นที่ 1"></div>
+        <div class="fg"><label>ชื่อย่อหน่วยงาน</label><input id="s_agencyShort" type="text" placeholder="เช่น สสพ.1"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>ชื่อระบบ (topbar)</label><input id="s_sysTitle" type="text" value="Dashboard เจ้าหน้าที่ส่งเสริมสหกรณ์"></div>
+        <div class="fg"><label>ชื่อระบบ (หน้า Login)</label><input id="s_loginTitle" type="text" placeholder="ใช้ชื่อย่อได้ เช่น สสพ.1"></div>
+      </div>
+      <div class="fg">
+        <label>ประเภทรายการ / สหกรณ์ (คั่นด้วยจุลภาค)</label>
+        <input id="s_types" type="text" value="สหกรณ์ออมทรัพย์,สหกรณ์บริการ,สหกรณ์เครดิตยูเนี่ยน,สหกรณ์ร้านค้า,สหกรณ์การเกษตร,สหกรณ์ประมง">
+        <div class="hint">แก้ไขเพิ่ม/ลบประเภทได้ตามต้องการ</div>
+      </div>
+      <div class="fg">
+        <label>สีหลักของระบบ</label>
+        <div class="color-row" id="colorRow"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <input id="s_colorCustom" type="color" value="#1a4f8a" style="width:42px;height:30px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;padding:2px">
+          <span style="font-size:.74rem;color:var(--muted)">หรือเลือกสีเอง</span>
+        </div>
+      </div>
+      <div class="preview-box" id="previewBox">
+        <div><div class="preview-title" id="prevTitle">Dashboard เจ้าหน้าที่ส่งเสริมสหกรณ์</div><div class="preview-sub" id="prevSub">หน่วยงาน · สสพ.X</div></div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-panel" id="panel2">
+      <div class="sp-title">บัญชีผู้ใช้งาน</div>
+      <div class="sp-sub">กำหนด username / password — <strong>admin</strong>: เพิ่ม/แก้ไข/ลบได้ | <strong>officer</strong>: ดู/แก้ไขได้เท่านั้น</div>
+      <table class="user-table">
+        <thead><tr><th>Username</th><th>Password</th><th>บทบาท</th><th style="width:34px"></th></tr></thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+      <button class="btn-add-row" onclick="addUserRow()">＋ เพิ่มบัญชีผู้ใช้</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step-panel" id="panel3">
+      <div class="sp-title">กลุ่มและเจ้าหน้าที่ส่งเสริมสหกรณ์</div>
+      <div class="sp-sub">เพิ่มกลุ่มและรายชื่อเจ้าหน้าที่ที่รับผิดชอบ กดปุ่ม 🗑️ เพื่อลบกลุ่มหรือเจ้าหน้าที่</div>
+      <div id="groupContainer"></div>
+      <button class="btn-add-group" onclick="addGroupBlock()">＋ เพิ่มกลุ่มใหม่</button>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step-panel" id="panel4">
+      <div class="sp-title">นำเข้าข้อมูลจากไฟล์ CSV</div>
+      <div class="sp-sub">อัปโหลดไฟล์ CSV ที่มีรายชื่อสหกรณ์ (ไม่บังคับ — กรอกเองได้ภายหลัง)</div>
+      <div class="csv-drop" id="csvDrop" onclick="document.getElementById('csvFile').click()">
+        <div class="csv-drop-icon">📂</div>
+        <div class="csv-drop-text"><strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวางที่นี่<br>รองรับ <code>.csv</code> UTF-8 / TIS-620 / BOM สูงสุด 10,000 แถว</div>
+        <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="handleCSVFile(this)">
+      </div>
+      <div id="csvMapSection" style="display:none">
+        <div class="csv-preview" id="csvPreview"></div>
+        <div class="csv-col-map">
+          <div class="csv-col-map-title">🔗 จับคู่คอลัมน์ CSV กับฟิลด์ในระบบ</div>
+          <div id="csvMapRows"></div>
+        </div>
+        <div class="csv-status" id="csvStatus"></div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn btn-success btn-sm" onclick="applyCSVImport()">✅ ยืนยันนำเข้า</button>
+          <button class="btn btn-outline btn-sm" onclick="resetCSV()">🔄 เลือกไฟล์ใหม่</button>
+        </div>
+      </div>
+      <div id="csvDoneMsg" style="display:none;margin-top:10px">
+        <div class="csv-status ok" id="csvDoneText" style="display:block"></div>
+      </div>
+      <div style="margin-top:14px;padding:11px 13px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:.76rem;color:#92400e;line-height:1.7">
+        <strong>💡 รูปแบบ CSV ที่แนะนำ:</strong> หัวคอลัมน์แถวแรก เช่น <code>Coop_ID, Coop_Name, Type</code><br>ระบบจะตรวจจับหัวคอลัมน์อัตโนมัติและให้ท่านจับคู่กับฟิลด์ต่างๆ
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="step-panel" id="panel5">
+      <div class="sp-title">✅ สรุปการตั้งค่า</div>
+      <div class="sp-sub">ตรวจสอบข้อมูลก่อนเริ่มใช้งาน — สามารถแก้ไขได้ภายหลังผ่าน ⚙️ ตั้งค่า</div>
+      <div class="summary-grid" id="summaryGrid"></div>
+      <div style="padding:11px 13px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:.8rem;color:#15803d;line-height:1.7">
+        ✅ ข้อมูลทั้งหมดบันทึกในเครื่องของท่าน (localStorage) — ไม่มีการส่งข้อมูลไปที่ไหน
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn btn-outline" id="btnPrev" onclick="prevStep()" style="visibility:hidden">← ย้อนกลับ</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextStep()">ถัดไป →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ LOGIN ══════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="lcard-logo">
+      <svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="20" r="10" fill="#fff"/><path d="M22 30Q22 34 32 35.5Q42 34 42 30L42 32Q42 38 32 39.5Q22 38 22 32Z" fill="#fff"/><path d="M12 60Q12 43 32 40.5Q52 43 52 60Z" fill="#fff"/><path d="M32 40.5L26 47L32 50L38 47Z" fill="#e8a000"/><rect x="27" y="45" width="10" height="6" rx="1.5" fill="#e8a000"/><rect x="12" y="41" width="8" height="3.5" rx="1.75" fill="#e8a000"/><rect x="44" y="41" width="8" height="3.5" rx="1.75" fill="#e8a000"/><path d="M19 18Q19 9 32 9Q45 9 45 18" fill="rgba(15,45,82,.6)"/><rect x="17" y="17" width="30" height="3.5" rx="1.75" fill="rgba(9,30,58,.7)"/><circle cx="32" cy="13" r="3.5" fill="#e8a000"/><circle cx="32" cy="13" r="1.8" fill="#fff"/></svg>
+    </div>
+    <div class="lcard-title" id="loginCardTitle">สำนักงาน</div>
+    <div class="lcard-sub" id="loginCardSub">ระบบจัดการข้อมูลเจ้าหน้าที่</div>
+    <div class="lfield"><label>ชื่อผู้ใช้งาน</label><input id="lu" type="text" placeholder="Username" autocomplete="username"></div>
+    <div class="lfield"><label>รหัสผ่าน</label><input id="lp" type="password" placeholder="Password" autocomplete="current-password"></div>
+    <div id="loginError"></div>
+    <button class="btn-login" onclick="doLogin()">🔐 เข้าสู่ระบบ</button>
+    <div class="login-reset"><a onclick="resetSetup()">⚙️ ตั้งค่าหน่วยงานใหม่</a></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ APP ══════════════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="tb-logo">
+      <svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="20" r="10" fill="#1a4f8a"/><path d="M22 30Q22 34 32 35.5Q42 34 42 30L42 32Q42 38 32 39.5Q22 38 22 32Z" fill="#1a4f8a"/><path d="M12 60Q12 43 32 40.5Q52 43 52 60Z" fill="#1a4f8a"/><path d="M32 40.5L26 47L32 50L38 47Z" fill="#e8a000"/><rect x="27" y="45" width="10" height="6" rx="1.5" fill="#e8a000"/><rect x="12" y="41" width="8" height="3.5" rx="1.75" fill="#e8a000"/><rect x="44" y="41" width="8" height="3.5" rx="1.75" fill="#e8a000"/><path d="M19 18Q19 9 32 9Q45 9 45 18" fill="#0f2d52"/><rect x="17" y="17" width="30" height="3.5" rx="1.75" fill="#091e3a"/><circle cx="32" cy="13" r="3.5" fill="#e8a000"/><circle cx="32" cy="13" r="1.8" fill="#fff"/></svg>
+    </div>
+    <div class="tb-text">
+      <div class="tb-title" id="tbTitle">Dashboard</div>
+      <div class="tb-sub" id="tbSub">หน่วยงาน</div>
+    </div>
+    <div class="tb-actions">
+      <button class="btn-topbar" onclick="openImportModal()">📥 นำเข้า CSV</button>
+      <button class="btn-topbar" onclick="openSettings()">⚙️ ตั้งค่า</button>
+      <div class="tb-user">
+        <div class="tb-avatar" id="tbAvatar">A</div>
+        <div class="tb-uname" id="tbUname">admin</div>
+      </div>
+      <button class="btn-topbar" onclick="doLogout()">ออกจากระบบ</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="stats-row" id="statsRow"></div>
+    <div class="toolbar">
+      <div class="sw"><span class="sw-icon">🔍</span><input type="text" id="searchInput" placeholder="ค้นหาชื่อ / รหัส / เจ้าหน้าที่ / เบอร์โทร..." oninput="applyFilter()"></div>
+      <select class="flt" id="fType" onchange="applyFilter()"></select>
+      <select class="flt" id="fGroup" onchange="applyFilter()"></select>
+      <select class="flt" id="fOfficer" onchange="applyFilter()"></select>
+      <div class="tb-right">
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">📤 Export CSV</button>
+        <button class="btn btn-primary btn-sm" id="btnAdd" onclick="openAdd()">＋ เพิ่มรายการ</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="tw-head"><div class="tw-title" id="tableTitle">รายชื่อ</div><div class="tw-count" id="tableCount"></div></div>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-no">#</th>
+              <th onclick="sortBy('Coop_ID')">รหัส <span class="si" id="s_Coop_ID"></span></th>
+              <th onclick="sortBy('Coop_Name')">ชื่อ <span class="si" id="s_Coop_Name"></span></th>
+              <th onclick="sortBy('Type')">ประเภท <span class="si" id="s_Type"></span></th>
+              <th onclick="sortBy('Mu')">กลุ่มส่งเสริม <span class="si" id="s_Mu"></span></th>
+              <th onclick="sortBy('Officers')">ชื่อ จสส. <span class="si" id="s_Officers"></span></th>
+              <th onclick="sortBy('Phone_Officer')">เบอร์โทร <span class="si" id="s_Phone_Officer"></span></th>
+              <th>Gmail</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pager"><div class="pg-info" id="pgInfo"></div><div class="pg-btns" id="pgBtns"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT/ADD -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <div class="mh"><div class="mh-title" id="modalTitle">✏️ แก้ไขข้อมูล</div><button class="mc" onclick="closeModal('editOverlay')">✕</button></div>
+    <div class="mb">
+      <div class="m-section">📋 ข้อมูลรายการ</div>
+      <div class="frow">
+        <div class="fg"><label>รหัส</label><input type="text" id="fCoopID"></div>
+        <div class="fg"><label>ประเภท</label><select id="fType2"></select></div>
+      </div>
+      <div class="fg"><label>ชื่อ *</label><input type="text" id="fCoopName" placeholder="ชื่อสหกรณ์"></div>
+      <div class="m-section">👤 ข้อมูลเจ้าหน้าที่</div>
+      <div class="frow">
+        <div class="fg"><label>กลุ่มส่งเสริมสหกรณ์</label><select id="fMu" onchange="updateOfficerDropdown()"><option value="">-- เลือกกลุ่ม --</option></select></div>
+        <div class="fg"><label>ชื่อเจ้าหน้าที่ (จสส.)</label><select id="fOfficer2"><option value="">-- เลือกชื่อ จสส. --</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>📞 เบอร์โทรศัพท์</label><input type="tel" id="fPhone" placeholder="0X-XXXX-XXXX"></div>
+        <div class="fg"><label>✉️ Gmail</label><input type="email" id="fGmail" placeholder="example@gmail.com"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn btn-outline" onclick="closeModal('editOverlay')">ยกเลิก</button><button class="btn btn-primary" onclick="saveRecord()">💾 บันทึก</button></div>
+  </div>
+</div>
+
+<!-- MODAL: IMPORT CSV (in-app) -->
+<div class="overlay" id="importOverlay">
+  <div class="modal" style="max-width:600px">
+    <div class="mh"><div class="mh-title">📥 นำเข้าข้อมูลจาก CSV</div><button class="mc" onclick="closeModal('importOverlay')">✕</button></div>
+    <div class="mb">
+      <div class="csv-drop" id="csvDrop2" onclick="document.getElementById('csvFile2').click()">
+        <div class="csv-drop-icon">📂</div>
+        <div class="csv-drop-text"><strong>คลิกเพื่อเลือกไฟล์</strong> หรือลากมาวาง<br>รองรับ <code>.csv</code> UTF-8 / BOM</div>
+        <input type="file" id="csvFile2" accept=".csv" style="display:none" onchange="handleCSVFile2(this)">
+      </div>
+      <div id="csvMapSection2" style="display:none">
+        <div class="csv-preview" id="csvPreview2" style="margin-top:11px"></div>
+        <div class="csv-col-map" style="margin-top:11px"><div class="csv-col-map-title">🔗 จับคู่คอลัมน์</div><div id="csvMapRows2"></div></div>
+        <div style="margin-top:9px;padding:8px 11px;background:#fffbeb;border:1px solid #fde68a;border-radius:7px;font-size:.74rem;color:#92400e">
+          ⚠️ ข้อมูลที่นำเข้าจะ <strong>เพิ่มต่อท้าย</strong>รายการที่มีอยู่ ไม่เขียนทับ
+        </div>
+        <div class="csv-status" id="csvStatus2"></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeModal('importOverlay')">ปิด</button>
+      <button class="btn btn-success" id="btnApplyImport2" onclick="applyCSVImport2()" style="display:none">✅ นำเข้าข้อมูล</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SETTINGS -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal settings-modal">
+    <div class="mh"><div class="mh-title">⚙️ ตั้งค่าหน่วยงาน</div><button class="mc" onclick="closeModal('settingsOverlay')">✕</button></div>
+    <div class="mb">
+      <div class="settings-tabs">
+        <button class="stab active" onclick="switchStab(0,this)">🏢 หน่วยงาน</button>
+        <button class="stab" onclick="switchStab(1,this)">👤 บัญชีผู้ใช้</button>
+        <button class="stab" onclick="switchStab(2,this)">👥 กลุ่ม &amp; จสส.</button>
+      </div>
+      <div id="stabPanel0">
+        <div class="frow">
+          <div class="fg"><label>ชื่อหน่วยงาน (เต็ม)</label><input id="cfg_agencyFull" type="text"></div>
+          <div class="fg"><label>ชื่อย่อ</label><input id="cfg_agencyShort" type="text"></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label>ชื่อระบบ (topbar)</label><input id="cfg_sysTitle" type="text"></div>
+          <div class="fg"><label>ชื่อระบบ (login)</label><input id="cfg_loginTitle" type="text"></div>
+        </div>
+        <div class="fg"><label>ประเภทรายการ (คั่นด้วยจุลภาค)</label><input id="cfg_types" type="text"></div>
+        <div class="fg"><label>สีหลัก</label><input id="cfg_color" type="color" style="width:50px;height:34px;border:1.5px solid var(--border);border-radius:7px;cursor:pointer;padding:2px"></div>
+      </div>
+      <div id="stabPanel1" style="display:none">
+        <table class="user-table"><thead><tr><th>Username</th><th>Password</th><th>Role</th><th style="width:34px"></th></tr></thead><tbody id="cfgUserBody"></tbody></table>
+        <button class="btn-add-row" onclick="addCfgUserRow()">＋ เพิ่มบัญชี</button>
+      </div>
+      <div id="stabPanel2" style="display:none">
+        <div id="cfgGroupContainer"></div>
+        <button class="btn-add-group" onclick="addCfgGroupBlock()">＋ เพิ่มกลุ่ม</button>
+      </div>
+    </div>
+    <div class="mf"><button class="btn btn-outline" onclick="closeModal('settingsOverlay')">ยกเลิก</button><button class="btn btn-primary" onclick="saveSettings()">💾 บันทึก</button></div>
+  </div>
+</div>
+
+<!-- MODAL: DELETE -->
+<div class="overlay" id="delOverlay">
+  <div class="modal cmodal">
+    <div class="mh"><div class="mh-title">⚠️ ยืนยันการลบ</div><button class="mc" onclick="closeModal('delOverlay')">✕</button></div>
+    <div class="mb"><div class="cicon">🗑️</div><div class="cmsg" id="delMsg"></div></div>
+    <div class="mf"><button class="btn btn-outline" onclick="closeModal('delOverlay')">ยกเลิก</button><button class="btn btn-danger" onclick="confirmDelete()">🗑️ ลบเลย</button></div>
+  </div>
+</div>
+<div id="toastCont"></div>
+
+<script>
+// ── CONSTANTS ──
+const SK={cfg:'tpl_cfg_v3',data:'tpl_data_v3',done:'tpl_done'};
+const FIELDS=[
+  {key:'Coop_ID',label:'รหัส'},{key:'Coop_Name',label:'ชื่อ'},
+  {key:'Type',label:'ประเภท'},{key:'Mu',label:'กลุ่มส่งเสริม'},
+  {key:'Officers',label:'ชื่อ จสส.'},{key:'Phone_Officer',label:'เบอร์โทร'},
+  {key:'Gmail_Officer',label:'Gmail'},
+];
+const PRESET_COLORS=['#1a4f8a','#0f5132','#6b21a8','#9f1239','#0c4a6e','#7c2d12','#0369a1','#166534','#374151','#b45309'];
+let CFG={},rawData=[],currentUser=null;
+let filteredData=[],sortField='',sortAsc=true,editIdx=-1,deleteIdx=-1,curPage=1;
+const PAGE_SIZE=20;
+
+function loadAll(){
+  try{const c=localStorage.getItem(SK.cfg);if(c)CFG=JSON.parse(c);}catch(e){}
+  try{const d=localStorage.getItem(SK.data);if(d)rawData=JSON.parse(d);}catch(e){}
+}
+function saveCfg(){localStorage.setItem(SK.cfg,JSON.stringify(CFG));}
+function saveData(){localStorage.setItem(SK.data,JSON.stringify(rawData));}
+function isSetupDone(){return!!localStorage.getItem(SK.done)&&!!CFG.agencyFull;}
+
+// ── COLOR SWATCHES ──
+const colorRow=document.getElementById('colorRow');
+PRESET_COLORS.forEach(c=>{
+  const sw=document.createElement('div');
+  sw.className='color-swatch';sw.style.background=c;sw.dataset.color=c;
+  sw.onclick=()=>{document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));sw.classList.add('active');document.getElementById('s_colorCustom').value=c;updatePreview();};
+  colorRow.appendChild(sw);
+});
+document.querySelectorAll('.color-swatch')[0].classList.add('active');
+document.getElementById('s_colorCustom').addEventListener('input',()=>{document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));updatePreview();});
+['s_sysTitle','s_agencyFull','s_agencyShort'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',updatePreview);});
+
+function updatePreview(){
+  const c=document.getElementById('s_colorCustom').value;
+  document.getElementById('previewBox').style.background=c;
+  document.getElementById('prevTitle').textContent=document.getElementById('s_sysTitle').value||'Dashboard';
+  document.getElementById('prevSub').textContent=(document.getElementById('s_agencyFull').value||'หน่วยงาน')+' · '+(document.getElementById('s_agencyShort').value||'สสพ.X');
+}
+
+// ── WIZARD SETUP ──
+let wizStep=1;
+let csvParsed=[],csvHeaders=[],csvParsed2=[],csvHeaders2=[];
+
+function initUserTable(){
+  const tb=document.getElementById('userTableBody');tb.innerHTML='';
+  addUserRowTo(tb,'admin','admin123','admin');
+  addUserRowTo(tb,'officer','1234','officer');
+}
+function addUserRow(){addUserRowTo(document.getElementById('userTableBody'),'','','officer');}
+function addUserRowTo(tbody,u,p,r){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input type="text" value="${u}" placeholder="username"></td><td><input type="text" value="${p}" placeholder="password"></td><td><select><option value="admin"${r==='admin'?' selected':''}>admin</option><option value="officer"${r==='officer'?' selected':''}>officer</option></select></td><td><button class="btn-del-row" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+let grpId=0;
+function initGroupContainer(){
+  document.getElementById('groupContainer').innerHTML='';
+  addGroupBlock('กลุ่มส่งเสริมสหกรณ์ 1',['']);
+  addGroupBlock('กลุ่มจัดตั้งและส่งเสริมสหกรณ์',['','']);
+}
+function addGroupBlock(name='',officers=['']){
+  const id='g'+(++grpId);
+  const div=document.createElement('div');div.className='grp-block';div.id=id;
+  const oHTML=officers.map(o=>`<div class="grp-officer-row"><input type="text" value="${o}" placeholder="ชื่อ-สกุล เจ้าหน้าที่"><button class="btn-del-row" onclick="this.closest('.grp-officer-row').remove()">✕</button></div>`).join('');
+  div.innerHTML=`<div class="grp-block-head"><input type="text" value="${name}" placeholder="ชื่อกลุ่ม"><button class="btn-del-row" onclick="document.getElementById('${id}').remove()" title="ลบกลุ่ม">🗑️</button></div><div class="grp-officers">${oHTML}<button class="btn-add-officer" onclick="addOfficerRow('${id}')">＋ เพิ่มเจ้าหน้าที่</button></div>`;
+  document.getElementById('groupContainer').appendChild(div);
+}
+function addOfficerRow(blockId){
+  const cont=document.querySelector(`#${blockId} .grp-officers`);
+  const btn=cont.querySelector('.btn-add-officer');
+  const row=document.createElement('div');row.className='grp-officer-row';
+  row.innerHTML=`<input type="text" placeholder="ชื่อ-สกุล เจ้าหน้าที่"><button class="btn-del-row" onclick="this.closest('.grp-officer-row').remove()">✕</button>`;
+  cont.insertBefore(row,btn);row.querySelector('input').focus();
+}
+
+function nextStep(){
+  if(!validateStep(wizStep))return;
+  if(wizStep===5){finaliseSetup();return;}
+  wizStep++;if(wizStep===5)buildSummary();
+  renderStep();
+}
+function prevStep(){wizStep--;if(wizStep<1)wizStep=1;renderStep();}
+function renderStep(){
+  for(let i=1;i<=5;i++){
+    document.getElementById('panel'+i).classList.toggle('active',i===wizStep);
+    const t=document.getElementById('tab'+i);
+    t.classList.remove('active','done');
+    if(i===wizStep)t.classList.add('active');
+    else if(i<wizStep)t.classList.add('done');
+  }
+  document.getElementById('btnPrev').style.visibility=wizStep>1?'visible':'hidden';
+  const nb=document.getElementById('btnNext');
+  if(wizStep===5){nb.textContent='🚀 เริ่มใช้งาน';nb.className='btn btn-success';}
+  else{nb.textContent='ถัดไป →';nb.className='btn btn-primary';}
+}
+function validateStep(s){
+  if(s===1&&!document.getElementById('s_agencyFull').value.trim()){showToast('กรุณากรอกชื่อหน่วยงาน','warn');return false;}
+  if(s===2){
+    const rows=document.querySelectorAll('#userTableBody tr');
+    if(!rows.length){showToast('กรุณาเพิ่มบัญชีผู้ใช้งานอย่างน้อย 1 บัญชี','warn');return false;}
+    for(const r of rows){const u=r.querySelectorAll('input')[0].value.trim();const p=r.querySelectorAll('input')[1].value.trim();if(!u||!p){showToast('กรุณากรอก username/password ให้ครบ','warn');return false;}}
+  }
+  return true;
+}
+function readUsersFromDOM(tbodyId){
+  return[...document.querySelectorAll('#'+tbodyId+' tr')].map(r=>{
+    const u=r.querySelectorAll('input')[0].value.trim();const p=r.querySelectorAll('input')[1].value.trim();const role=r.querySelector('select').value;
+    return u&&p?{username:u,pass:p,role}:null;
+  }).filter(Boolean);
+}
+function readGroupsFromDOM(containerId){
+  return[...document.querySelectorAll('#'+containerId+' .grp-block')].map(b=>{
+    const name=b.querySelector('.grp-block-head input').value.trim();
+    const officers=[...b.querySelectorAll('.grp-officer-row input')].map(i=>i.value.trim()).filter(Boolean);
+    return name?{name,officers}:null;
+  }).filter(Boolean);
+}
+function buildSummary(){
+  const grps=readGroupsFromDOM('groupContainer');
+  const users=readUsersFromDOM('userTableBody');
+  const types=document.getElementById('s_types').value.split(',').map(t=>t.trim()).filter(Boolean);
+  document.getElementById('summaryGrid').innerHTML=`
+    <div class="summary-card"><h4>🏢 หน่วยงาน</h4><p>${document.getElementById('s_agencyFull').value}<small>ชื่อย่อ: ${document.getElementById('s_agencyShort').value||'—'}</small></p></div>
+    <div class="summary-card"><h4>📋 ระบบ</h4><p>${document.getElementById('s_sysTitle').value||'—'}<small>Login: ${document.getElementById('s_loginTitle').value||document.getElementById('s_agencyShort').value||'—'}</small></p></div>
+    <div class="summary-card"><h4>👤 บัญชีผู้ใช้</h4><p>${users.length} บัญชี<small>${users.map(u=>u.username+' ('+u.role+')').join(', ')}</small></p></div>
+    <div class="summary-card"><h4>👥 กลุ่ม จสส.</h4><p>${grps.length} กลุ่ม / ${grps.reduce((s,g)=>s+(g.officers?.length||0),0)} คน<small>${grps.map(g=>g.name).join(', ')}</small></p></div>
+    <div class="summary-card"><h4>🗂️ ประเภท</h4><p>${types.length} ประเภท<small>${types.slice(0,3).join(', ')}${types.length>3?'...':''}</small></p></div>
+    <div class="summary-card"><h4>📊 ข้อมูล</h4><p>${rawData.length} รายการ<small>${rawData.length?'นำเข้า CSV แล้ว':'ยังไม่มี (เพิ่มทีหลังได้)'}</small></p></div>`;
+}
+function finaliseSetup(){
+  const c=document.getElementById('s_colorCustom').value;
+  CFG={
+    agencyFull:document.getElementById('s_agencyFull').value.trim(),
+    agencyShort:document.getElementById('s_agencyShort').value.trim(),
+    sysTitle:document.getElementById('s_sysTitle').value.trim(),
+    loginTitle:document.getElementById('s_loginTitle').value.trim()||document.getElementById('s_agencyShort').value.trim(),
+    types:document.getElementById('s_types').value.split(',').map(t=>t.trim()).filter(Boolean),
+    color:c,
+    users:readUsersFromDOM('userTableBody'),
+    groups:readGroupsFromDOM('groupContainer'),
+  };
+  saveCfg();saveData();localStorage.setItem(SK.done,'1');
+  document.getElementById('setupScreen').style.display='none';
+  applyTheme();showLoginScreen();
+  showToast('✅ ตั้งค่าหน่วยงานสำเร็จ','success');
+}
+
+// ── CSV PARSING ──
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length)return{headers:[],rows:[]};
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+  const rows=lines.slice(1).map(line=>{
+    const cells=[];let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      if(line[i]==='"'){inQ=!inQ;}
+      else if(line[i]===','&&!inQ){cells.push(cur.trim());cur='';}
+      else cur+=line[i];
+    }
+    cells.push(cur.trim());return cells;
+  }).filter(r=>r.some(c=>c));
+  return{headers,rows};
+}
+function buildColMapHTML(headers,targetId){
+  document.getElementById(targetId).innerHTML=FIELDS.map(f=>{
+    const guess=headers.findIndex(h=>h.toLowerCase().replace(/[\s_]/g,'')===f.key.toLowerCase().replace(/[\s_]/g,'')||h.toLowerCase().includes(f.label.toLowerCase()));
+    const opts=['<option value="">(ไม่นำเข้า)</option>',...headers.map((h,i)=>`<option value="${i}"${i===guess?' selected':''}>${h}</option>`)].join('');
+    return`<div class="csv-map-row"><span class="csv-map-label">${f.label}</span><span class="csv-map-arrow">→</span><select data-field="${f.key}">${opts}</select></div>`;
+  }).join('');
+}
+function buildPreviewHTML(headers,rows,n=5){
+  const shown=rows.slice(0,n);
+  return`<div class="csv-preview-head"><span>ตัวอย่าง ${shown.length} แถว จาก ${rows.length} แถว</span></div><div style="overflow-x:auto;max-height:150px;overflow-y:auto"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${shown.map(r=>`<tr>${headers.map((_,i)=>`<td>${r[i]||''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function getMaps(selId){
+  const m={};document.querySelectorAll('#'+selId+' select').forEach(s=>{if(s.value!=='')m[s.dataset.field]=parseInt(s.value);});return m;
+}
+function rowsToRecords(rows,maps){
+  return rows.map(row=>{
+    const rec={Coop_ID:'',Coop_Name:'',Type:'',Mu:'',Officers:'',Phone_Officer:'',Gmail_Officer:''};
+    Object.entries(maps).forEach(([k,i])=>{rec[k]=(row[i]||'').trim();});return rec;
+  }).filter(r=>r.Coop_ID||r.Coop_Name);
+}
+
+// SETUP wizard CSV
+function handleCSVFile(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const{headers,rows}=parseCSV(e.target.result);
+    csvHeaders=headers;csvParsed=rows;
+    document.getElementById('csvPreview').innerHTML=buildPreviewHTML(headers,rows);
+    buildColMapHTML(headers,'csvMapRows');
+    document.getElementById('csvMapSection').style.display='block';
+    const st=document.getElementById('csvStatus');st.className='csv-status info';st.textContent=`พบ ${rows.length} แถว — จับคู่คอลัมน์แล้วกด "ยืนยันนำเข้า"`;
+    document.getElementById('csvDoneMsg').style.display='none';
+  };
+  r.readAsText(f,'UTF-8');
+}
+function applyCSVImport(){
+  const maps=getMaps('csvMapRows');
+  if(!Object.keys(maps).length){showToast('กรุณาจับคู่คอลัมน์อย่างน้อย 1 ฟิลด์','warn');return;}
+  rawData=rowsToRecords(csvParsed,maps);
+  const st=document.getElementById('csvStatus');st.className='csv-status ok';st.textContent=`✅ นำเข้า ${rawData.length} รายการสำเร็จ`;
+  document.getElementById('csvDoneMsg').style.display='block';
+  document.getElementById('csvDoneText').textContent=`✅ นำเข้าข้อมูลสำเร็จ ${rawData.length} รายการ`;
+  showToast(`นำเข้า ${rawData.length} รายการแล้ว`,'success');
+}
+function resetCSV(){
+  csvParsed=[];csvHeaders=[];
+  document.getElementById('csvMapSection').style.display='none';
+  document.getElementById('csvDoneMsg').style.display='none';
+  document.getElementById('csvFile').value='';
+}
+
+// in-app CSV
+function handleCSVFile2(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const{headers,rows}=parseCSV(e.target.result);
+    csvHeaders2=headers;csvParsed2=rows;
+    document.getElementById('csvPreview2').innerHTML=buildPreviewHTML(headers,rows);
+    buildColMapHTML(headers,'csvMapRows2');
+    document.getElementById('csvMapSection2').style.display='block';
+    document.getElementById('btnApplyImport2').style.display='inline-flex';
+    const st=document.getElementById('csvStatus2');st.className='csv-status info';st.textContent=`พบ ${rows.length} แถว`;
+  };
+  r.readAsText(f,'UTF-8');
+}
+function applyCSVImport2(){
+  const maps=getMaps('csvMapRows2');
+  if(!Object.keys(maps).length){showToast('กรุณาจับคู่คอลัมน์','warn');return;}
+  const newRows=rowsToRecords(csvParsed2,maps);
+  rawData=[...rawData,...newRows];
+  saveData();applyFilter();
+  showToast(`✅ นำเข้า ${newRows.length} รายการสำเร็จ`,'success');
+  closeModal('importOverlay');resetImportModal();
+}
+function resetImportModal(){
+  csvParsed2=[];csvHeaders2=[];
+  document.getElementById('csvMapSection2').style.display='none';
+  document.getElementById('btnApplyImport2').style.display='none';
+  document.getElementById('csvFile2').value='';
+  document.getElementById('csvStatus2').className='csv-status';
+}
+function openImportModal(){resetImportModal();document.getElementById('importOverlay').classList.add('show');}
+
+// drag-drop
+function initDrop(dropId,fileId,handler){
+  const z=document.getElementById(dropId);if(!z)return;
+  z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('dragover');});
+  z.addEventListener('dragleave',()=>z.classList.remove('dragover'));
+  z.addEventListener('drop',e=>{
+    e.preventDefault();z.classList.remove('dragover');
+    const f=e.dataTransfer.files[0];
+    if(f&&f.name.endsWith('.csv')){const fi=document.getElementById(fileId);const dt=new DataTransfer();dt.items.add(f);fi.files=dt.files;handler({files:dt.files});}
+  });
+}
+
+// ── THEME ──
+function applyTheme(){
+  if(!CFG.color)return;
+  const c=CFG.color;
+  const adj=(hex,amt)=>{let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);r=Math.min(255,Math.max(0,r+amt));g=Math.min(255,Math.max(0,g+amt));b=Math.min(255,Math.max(0,b+amt));return'#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');};
+  const root=document.documentElement;
+  root.style.setProperty('--primary',c);
+  root.style.setProperty('--primary-light',adj(c,28));
+  root.style.setProperty('--primary-dark',adj(c,-30));
+}
+
+// ── LOGIN ──
+function showLoginScreen(){
+  document.getElementById('loginCardTitle').innerHTML=(CFG.loginTitle||CFG.agencyFull||'').replace('\n','<br>');
+  document.getElementById('loginCardSub').textContent=CFG.agencyShort||'ระบบจัดการข้อมูลเจ้าหน้าที่';
+  document.getElementById('loginScreen').classList.add('show');
+}
+function doLogin(){
+  const u=document.getElementById('lu').value.trim();
+  const p=document.getElementById('lp').value.trim();
+  const err=document.getElementById('loginError');
+  if(!u||!p){err.textContent='กรุณากรอกชื่อผู้ใช้และรหัสผ่าน';return;}
+  const usr=(CFG.users||[]).find(x=>x.username===u&&x.pass===p);
+  if(!usr){err.textContent='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';return;}
+  currentUser={name:u,role:usr.role};
+  document.getElementById('loginScreen').classList.remove('show');
+  document.getElementById('app').classList.add('show');
+  document.getElementById('tbAvatar').textContent=u[0].toUpperCase();
+  document.getElementById('tbUname').textContent=u;
+  document.getElementById('tbTitle').textContent=CFG.sysTitle||'Dashboard';
+  document.getElementById('tbSub').textContent=CFG.agencyFull||'';
+  document.getElementById('tableTitle').textContent='รายชื่อในความรับผิดชอบ '+(CFG.agencyShort||'');
+  document.getElementById('btnAdd').style.display=usr.role==='admin'?'':'none';
+  rebuildDropdowns();applyFilter();
+}
+function doLogout(){
+  currentUser=null;
+  document.getElementById('loginScreen').classList.add('show');
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('lu').value='';document.getElementById('lp').value='';
+  document.getElementById('loginError').textContent='';
+}
+function resetSetup(){if(!confirm('ต้องการตั้งค่าหน่วยงานใหม่ทั้งหมดหรือไม่?'))return;localStorage.removeItem(SK.done);location.reload();}
+document.getElementById('lp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('lu').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// ── DROPDOWNS ──
+function rebuildDropdowns(){
+  const types=CFG.types||[];
+  const ft=document.getElementById('fType');ft.innerHTML=`<option value="">ประเภทรายการทั้งหมด</option>`;
+  types.forEach(t=>ft.innerHTML+=`<option>${t}</option>`);
+  const ft2=document.getElementById('fType2');ft2.innerHTML=types.map(t=>`<option>${t}</option>`).join('');
+  const groups=(CFG.groups||[]).map(g=>g.name);
+  const fg=document.getElementById('fGroup');fg.innerHTML=`<option value="">กลุ่มทั้งหมด</option><option value="__unassigned__">ยังไม่กำหนดกลุ่ม</option>`;
+  groups.forEach(g=>fg.innerHTML+=`<option>${g}</option>`);
+  const fm=document.getElementById('fMu');fm.innerHTML=`<option value="">-- เลือกกลุ่ม --</option>`;
+  groups.forEach(g=>fm.innerHTML+=`<option>${g}</option>`);
+  const allOfficers=(CFG.groups||[]).flatMap(g=>g.officers||[]);
+  const fo=document.getElementById('fOfficer');fo.innerHTML=`<option value="">เจ้าหน้าที่ทั้งหมด</option><option value="__none__">ยังไม่มีเจ้าหน้าที่</option>`;
+  allOfficers.forEach(o=>fo.innerHTML+=`<option value="${o}">${o}</option>`);
+}
+function updateOfficerDropdown(){
+  const grp=document.getElementById('fMu').value;
+  const sel=document.getElementById('fOfficer2');const prev=sel.value;
+  sel.innerHTML='<option value="">-- เลือกชื่อ จสส. --</option>';
+  const grpObj=(CFG.groups||[]).find(g=>g.name===grp);
+  const list=grp?(grpObj?.officers||[]):(CFG.groups||[]).flatMap(g=>g.officers||[]);
+  list.forEach(o=>sel.innerHTML+=`<option>${o}</option>`);
+  if(prev&&list.includes(prev))sel.value=prev;
+}
+
+// ── SETTINGS ──
+let cfgGid=0;
+function openSettings(){
+  document.getElementById('cfg_agencyFull').value=CFG.agencyFull||'';
+  document.getElementById('cfg_agencyShort').value=CFG.agencyShort||'';
+  document.getElementById('cfg_sysTitle').value=CFG.sysTitle||'';
+  document.getElementById('cfg_loginTitle').value=CFG.loginTitle||'';
+  document.getElementById('cfg_types').value=(CFG.types||[]).join(',');
+  document.getElementById('cfg_color').value=CFG.color||'#1a4f8a';
+  const tb=document.getElementById('cfgUserBody');tb.innerHTML='';
+  (CFG.users||[]).forEach(u=>addUserRowTo(tb,u.username,u.pass,u.role));
+  document.getElementById('cfgGroupContainer').innerHTML='';
+  (CFG.groups||[]).forEach(g=>addCfgGroupBlock(g.name,g.officers||[]));
+  // reset to tab 0
+  switchStab(0,document.querySelectorAll('.stab')[0]);
+  document.getElementById('settingsOverlay').classList.add('show');
+}
+function addCfgGroupBlock(name='',officers=['']){
+  const id='cg'+(++cfgGid);
+  const div=document.createElement('div');div.className='grp-block';div.id=id;
+  const oHTML=officers.map(o=>`<div class="grp-officer-row"><input type="text" value="${o}" placeholder="ชื่อ-สกุล เจ้าหน้าที่"><button class="btn-del-row" onclick="this.closest('.grp-officer-row').remove()">✕</button></div>`).join('');
+  div.innerHTML=`<div class="grp-block-head"><input type="text" value="${name}" placeholder="ชื่อกลุ่ม"><button class="btn-del-row" onclick="document.getElementById('${id}').remove()">🗑️</button></div><div class="grp-officers">${oHTML}<button class="btn-add-officer" onclick="addCfgOfficerRow('${id}')">＋ เพิ่มเจ้าหน้าที่</button></div>`;
+  document.getElementById('cfgGroupContainer').appendChild(div);
+}
+function addCfgUserRow(){addUserRowTo(document.getElementById('cfgUserBody'),'','','officer');}
+function addCfgOfficerRow(id){
+  const cont=document.querySelector(`#${id} .grp-officers`);const btn=cont.querySelector('.btn-add-officer');
+  const row=document.createElement('div');row.className='grp-officer-row';
+  row.innerHTML=`<input type="text" placeholder="ชื่อ-สกุล เจ้าหน้าที่"><button class="btn-del-row" onclick="this.closest('.grp-officer-row').remove()">✕</button>`;
+  cont.insertBefore(row,btn);row.querySelector('input').focus();
+}
+function switchStab(idx,btn){
+  document.querySelectorAll('.stab').forEach((b,i)=>{b.classList.toggle('active',i===idx);document.getElementById('stabPanel'+i).style.display=i===idx?'block':'none';});
+}
+function saveSettings(){
+  const users=readUsersFromDOM('cfgUserBody');
+  const groups=readGroupsFromDOM('cfgGroupContainer');
+  CFG.agencyFull=document.getElementById('cfg_agencyFull').value.trim();
+  CFG.agencyShort=document.getElementById('cfg_agencyShort').value.trim();
+  CFG.sysTitle=document.getElementById('cfg_sysTitle').value.trim();
+  CFG.loginTitle=document.getElementById('cfg_loginTitle').value.trim();
+  CFG.types=document.getElementById('cfg_types').value.split(',').map(t=>t.trim()).filter(Boolean);
+  CFG.color=document.getElementById('cfg_color').value;
+  CFG.users=users;CFG.groups=groups;
+  saveCfg();applyTheme();rebuildDropdowns();
+  document.getElementById('tbTitle').textContent=CFG.sysTitle||'Dashboard';
+  document.getElementById('tbSub').textContent=CFG.agencyFull||'';
+  document.getElementById('tableTitle').textContent='รายชื่อในความรับผิดชอบ '+(CFG.agencyShort||'');
+  applyFilter();closeModal('settingsOverlay');showToast('✅ บันทึกการตั้งค่าสำเร็จ','success');
+}
+
+// ── STATS ──
+function renderStats(){
+  const total=rawData.length,assigned=rawData.filter(r=>r.Officers).length;
+  const grpCount=(CFG.groups||[]).length,offCount=(CFG.groups||[]).flatMap(g=>g.officers||[]).length;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="sc"><div class="sc-icon ic-blue">🏢</div><div><div class="sc-num">${total}</div><div class="sc-label">รายการทั้งหมด</div></div></div>
+    <div class="sc c-green"><div class="sc-icon ic-green">✅</div><div><div class="sc-num">${assigned}</div><div class="sc-label">มีเจ้าหน้าที่แล้ว</div></div></div>
+    <div class="sc c-warn"><div class="sc-icon ic-warn">⏳</div><div><div class="sc-num">${total-assigned}</div><div class="sc-label">ยังไม่มีเจ้าหน้าที่</div></div></div>
+    <div class="sc c-gold"><div class="sc-icon ic-gold">👥</div><div><div class="sc-num">${grpCount}</div><div class="sc-label">กลุ่มส่งเสริมสหกรณ์</div></div></div>
+    <div class="sc c-red"><div class="sc-icon ic-red">👤</div><div><div class="sc-num">${offCount}</div><div class="sc-label">เจ้าหน้าที่ส่งเสริมสหกรณ์</div></div></div>`;
+}
+
+// ── FILTER / SORT / TABLE ──
+function applyFilter(){
+  const q=(document.getElementById('searchInput').value||'').toLowerCase();
+  const ft=document.getElementById('fType').value;
+  const fg=document.getElementById('fGroup').value;
+  const fo=document.getElementById('fOfficer').value;
+  filteredData=rawData.filter(r=>{
+    const mq=!q||(r.Coop_Name||'').toLowerCase().includes(q)||(r.Coop_ID||'').includes(q)||(r.Officers||'').toLowerCase().includes(q)||(r.Phone_Officer||'').includes(q);
+    const mt=!ft||r.Type===ft;
+    let mg=true;if(fg==='__unassigned__')mg=!r.Mu;else if(fg)mg=r.Mu===fg;
+    const mo=!fo||(fo==='__none__'?!r.Officers:r.Officers===fo);
+    return mq&&mt&&mg&&mo;
+  });
+  if(sortField){filteredData.sort((a,b)=>{const av=(a[sortField]||'').toString().toLowerCase(),bv=(b[sortField]||'').toString().toLowerCase();return sortAsc?av.localeCompare(bv,'th'):bv.localeCompare(av,'th');});}
+  curPage=1;renderStats();renderTable();
+}
+function sortBy(field){
+  if(sortField===field)sortAsc=!sortAsc;else{sortField=field;sortAsc=true;}
+  document.querySelectorAll('thead th').forEach(t=>t.classList.remove('sorted'));
+  const el=document.getElementById('s_'+field);if(el){el.closest('th').classList.add('sorted');el.textContent=sortAsc?'▲':'▼';}
+  applyFilter();
+}
+function badgeClass(t){if(t.includes('ออมทรัพย์'))return'b-sav';if(t.includes('บริการ'))return'b-ser';if(t.includes('เครดิต'))return'b-cre';if(t.includes('ร้านค้า'))return'b-sto';if(t.includes('การเกษตร'))return'b-agr';if(t.includes('ประมง'))return'b-fis';return'';}
+function renderTable(){
+  const start=(curPage-1)*PAGE_SIZE,end=start+PAGE_SIZE,page=filteredData.slice(start,end);
+  const tbody=document.getElementById('tableBody');
+  document.getElementById('tableCount').textContent=`แสดง ${filteredData.length} รายการ จากทั้งหมด ${rawData.length}`;
+  if(!page.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-st"><div>🔍</div><p>ไม่พบข้อมูล</p></div></td></tr>`;renderPager();return;}
+  const isAdmin=currentUser?.role==='admin';
+  tbody.innerHTML=page.map((r,i)=>{
+    const gi=rawData.indexOf(r);
+    const phone=r.Phone_Officer?`<a href="tel:${r.Phone_Officer}" style="color:var(--primary);font-size:.79rem;text-decoration:none">📞 ${r.Phone_Officer}</a>`:`<span class="empty-cell">—</span>`;
+    const gmail=r.Gmail_Officer?`<a href="mailto:${r.Gmail_Officer}" style="color:var(--primary);font-size:.74rem">${r.Gmail_Officer}</a>`:`<span style="color:var(--light);font-size:.74rem">—</span>`;
+    const acts=isAdmin?`<button class="ab ab-edit" onclick="openEdit(${gi})">✏️</button><button class="ab ab-del" onclick="openDelete(${gi})">🗑️</button>`:`<button class="ab ab-edit" onclick="openEdit(${gi})">✏️</button>`;
+    return`<tr><td class="td-no">${start+i+1}</td><td class="td-id">${r.Coop_ID}</td><td class="td-name">${r.Coop_Name}</td><td><span class="badge ${badgeClass(r.Type)}">${r.Type}</span></td><td class="td-grp ${r.Mu?'':'empty-cell'}">${r.Mu||'—'}</td><td class="${r.Officers?'':'empty-cell'}">${r.Officers||'ยังไม่กำหนด'}</td><td>${phone}</td><td>${gmail}</td><td class="td-act">${acts}</td></tr>`;
+  }).join('');renderPager();
+}
+function renderPager(){
+  const total=filteredData.length,pages=Math.ceil(total/PAGE_SIZE);
+  const s=(curPage-1)*PAGE_SIZE+1,e=Math.min(curPage*PAGE_SIZE,total);
+  document.getElementById('pgInfo').textContent=total?`แสดง ${s}–${e} จาก ${total} รายการ`:'ไม่พบข้อมูล';
+  const cont=document.getElementById('pgBtns');if(pages<=1){cont.innerHTML='';return;}
+  let btns=`<button class="pb" onclick="goPage(${curPage-1})" ${curPage===1?'disabled':''}>‹</button>`;
+  for(let p=1;p<=pages;p++){if(pages>7&&p>3&&p<pages-2&&Math.abs(p-curPage)>1){if(p===4||p===pages-3)btns+=`<button class="pb" disabled>…</button>`;continue;}btns+=`<button class="pb ${p===curPage?'active':''}" onclick="goPage(${p})">${p}</button>`;}
+  btns+=`<button class="pb" onclick="goPage(${curPage+1})" ${curPage===pages?'disabled':''}>›</button>`;
+  cont.innerHTML=btns;
+}
+function goPage(p){curPage=p;renderTable();}
+
+// ── CRUD ──
+function openAdd(){
+  editIdx=-1;document.getElementById('modalTitle').textContent='➕ เพิ่มรายการใหม่';
+  document.getElementById('fCoopID').readOnly=false;
+  ['fCoopID','fCoopName','fPhone','fGmail'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fType2').value=(CFG.types||[])[0]||'';
+  document.getElementById('fMu').value='';updateOfficerDropdown();document.getElementById('fOfficer2').value='';
+  document.getElementById('editOverlay').classList.add('show');
+}
+function openEdit(idx){
+  editIdx=idx;const r=rawData[idx];
+  document.getElementById('modalTitle').textContent='✏️ แก้ไขข้อมูล';
+  document.getElementById('fCoopID').readOnly=true;
+  document.getElementById('fCoopID').value=r.Coop_ID;document.getElementById('fCoopName').value=r.Coop_Name;
+  document.getElementById('fType2').value=r.Type;document.getElementById('fMu').value=r.Mu||'';
+  updateOfficerDropdown();document.getElementById('fOfficer2').value=r.Officers||'';
+  document.getElementById('fPhone').value=r.Phone_Officer||'';document.getElementById('fGmail').value=r.Gmail_Officer||'';
+  document.getElementById('editOverlay').classList.add('show');
+}
+function saveRecord(){
+  const id=document.getElementById('fCoopID').value.trim();const name=document.getElementById('fCoopName').value.trim();
+  if(!name){showToast('กรุณากรอกชื่อ','warn');return;}if(editIdx===-1&&!id){showToast('กรุณากรอกรหัส','warn');return;}
+  const rec={Coop_ID:id,Coop_Name:name,Type:document.getElementById('fType2').value,Mu:document.getElementById('fMu').value,Officers:document.getElementById('fOfficer2').value,Phone_Officer:document.getElementById('fPhone').value.trim(),Gmail_Officer:document.getElementById('fGmail').value.trim()};
+  if(editIdx===-1){rawData.push(rec);showToast('✅ เพิ่มรายการสำเร็จ','success');}else{rawData[editIdx]=rec;showToast('✅ บันทึกสำเร็จ','success');}
+  saveData();closeModal('editOverlay');applyFilter();
+}
+function openDelete(idx){deleteIdx=idx;document.getElementById('delMsg').innerHTML=`คุณต้องการลบ<br><strong>${rawData[idx].Coop_Name}</strong><br>ออกจากระบบใช่หรือไม่?`;document.getElementById('delOverlay').classList.add('show');}
+function confirmDelete(){if(deleteIdx<0)return;rawData.splice(deleteIdx,1);saveData();closeModal('delOverlay');applyFilter();showToast('🗑️ ลบข้อมูลสำเร็จ','danger');deleteIdx=-1;}
+
+// ── EXPORT ──
+function exportCSV(){
+  const BOM='\uFEFF',header='รหัส,ชื่อ,ประเภท,กลุ่มส่งเสริม,ชื่อ จสส.,เบอร์โทร,Gmail';
+  const rows=filteredData.map(r=>[r.Coop_ID,`"${(r.Coop_Name||'').replace(/"/g,'""')}"`,r.Type,r.Mu,r.Officers,r.Phone_Officer,r.Gmail_Officer].join(','));
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(BOM+[header,...rows].join('\n'));
+  a.download=`${CFG.agencyShort||'dashboard'}_${new Date().toLocaleDateString('th-TH')}.csv`;
+  a.click();showToast('📤 Export CSV สำเร็จ','success');
+}
+
+// ── HELPERS ──
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
+function showToast(msg,type=''){const el=document.createElement('div');el.className='toast '+(type||'');el.textContent=msg;document.getElementById('toastCont').appendChild(el);setTimeout(()=>el.remove(),3200);}
+
+// ── BOOT ──
+loadAll();applyTheme();
+if(isSetupDone()){
+  document.getElementById('setupScreen').style.display='none';
+  showLoginScreen();
+}else{
+  document.getElementById('setupScreen').style.display='flex';
+  initUserTable();initGroupContainer();updatePreview();
+}
+initDrop('csvDrop','csvFile',handleCSVFile);
+initDrop('csvDrop2','csvFile2',handleCSVFile2);
+</script>
+</body>
+</html>
